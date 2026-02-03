@@ -1,7 +1,7 @@
-import { Component } from 'react';
+import { Component } from "react";
 
-import { getContract } from '../contract';
-import { getWeb3 } from '../web3';
+import { getContract } from "../contract";
+import { getWeb3 } from "../web3";
 
 class AuctionList extends Component {
   constructor(props) {
@@ -150,9 +150,10 @@ class AuctionList extends Component {
         <div className="card-body">
           <div className="row g-3">
             {auctions.map((auction) => {
+              const isBlocks = parseInt(auction.durationType) === 0;
               let isExpired, remainingText;
 
-              if (parseInt(auction.durationType) === 0) {
+              if (isBlocks) {
                 // Blocks
                 const blocksRemaining = Math.max(
                   0,
@@ -169,7 +170,6 @@ class AuctionList extends Component {
                   0,
                   parseInt(auction.endValue) - currentTime,
                 );
-                console.log(auction);
                 isExpired = secondsRemaining === 0;
 
                 if (isExpired) {
@@ -184,6 +184,8 @@ class AuctionList extends Component {
               const isSeller =
                 auction.seller.toLowerCase() === account.toLowerCase();
               const isHighestBidder =
+                auction.highestBidder &&
+                account &&
                 auction.highestBidder.toLowerCase() === account.toLowerCase();
               const hasBids =
                 auction.highestBidder !==
@@ -217,7 +219,7 @@ class AuctionList extends Component {
                           </p>
                           <p className="mb-1">
                             <small className="text-muted">
-                              Time Remaining:&nbsp;
+                              {isBlocks ? "Blocks" : "Time"} Remaining:&nbsp;
                             </small>
                             <span
                               className={

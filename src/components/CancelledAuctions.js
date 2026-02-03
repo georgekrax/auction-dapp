@@ -126,7 +126,7 @@ class CancelledAuctions extends Component {
                         <td>{auction.title}</td>
                         <td>
                           <code className="small">
-                            {auction.seller.substring(0, 10)}...
+                            {auction.seller}
                           </code>
                         </td>
                         <td>

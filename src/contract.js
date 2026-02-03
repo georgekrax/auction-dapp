@@ -1,7 +1,7 @@
-import AUCTION_ABI from "./AuctionABI.json";
-import { getWeb3 } from "./web3";
+import AUCTION_ABI from './AuctionABI.json';
+import { getWeb3 } from './web3';
 
-const CONTRACT_ADDRESS = "0x494a2262b564f72a456bd21b7211f7b3a2d971bd";
+const CONTRACT_ADDRESS = "0x2a6608127c44be3d7f96c27840710464583a4777";
 
 let contract;
 

@@ -1,7 +1,7 @@
-import { Component } from 'react';
+import { Component } from "react";
 
-import { getContract } from '../contract';
-import { getWeb3 } from '../web3';
+import { getContract } from "../contract";
+import { getWeb3 } from "../web3";
 
 class CreateAuction extends Component {
   constructor(props) {

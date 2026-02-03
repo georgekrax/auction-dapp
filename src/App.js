@@ -44,6 +44,7 @@ class App extends Component {
 
     this.handleAccountsChanged = this.handleAccountsChanged.bind(this);
     this.handleChainChanged = this.handleChainChanged.bind(this);
+    this.loadDataTimeout = null; // NEW: For debouncing
   }
 
   async componentDidMount() {
@@ -61,6 +62,7 @@ class App extends Component {
   }
 
   componentWillUnmount() {
+    // Cleanup MetaMask listeners
     if (window.ethereum) {
       window.ethereum.removeListener(
         "accountsChanged",
@@ -68,6 +70,20 @@ class App extends Component {
       );
       window.ethereum.removeListener("chainChanged", this.handleChainChanged);
     }
+
+    // Cleanup contract event listeners
+    if (this.auctionCreatedListener) this.auctionCreatedListener.unsubscribe();
+    if (this.bidPlacedListener) this.bidPlacedListener.unsubscribe();
+    if (this.auctionCancelledListener)
+      this.auctionCancelledListener.unsubscribe();
+    if (this.auctionCompletedListener)
+      this.auctionCompletedListener.unsubscribe();
+    if (this.bidderCompensatedListener)
+      this.bidderCompensatedListener.unsubscribe();
+    if (this.feesWithdrawnListener) this.feesWithdrawnListener.unsubscribe();
+    if (this.sellerBannedListener) this.sellerBannedListener.unsubscribe();
+    if (this.ownershipTransferredListener)
+      this.ownershipTransferredListener.unsubscribe();
   }
 
   handleAccountsChanged(accounts) {
@@ -108,15 +124,30 @@ class App extends Component {
 
   loadAllData = async () => {
     try {
-      const account = await getCurrentAccount();
-      const accountBalance = await getBalance(account);
-      const owner = await getOwner();
-      const contractBalance = await getContractBalance();
-      const totalFees = await getTotalFees();
-      const currentBlock = await getCurrentBlock();
-      const activeAuctions = await getActiveAuctions();
-      const completedAuctions = await getCompletedAuctions();
-      const cancelledAuctions = await getCancelledAuctions();
+      // Run ALL calls in parallel instead of sequentially
+      const [
+        account,
+        accountBalance,
+        owner,
+        contractBalance,
+        totalFees,
+        currentBlock,
+        activeAuctions,
+        completedAuctions,
+        cancelledAuctions,
+      ] = await Promise.all([
+        getCurrentAccount(),
+        getCurrentAccount().then((acc) => getBalance(acc)),
+        getOwner(),
+        getContractBalance(),
+        getTotalFees(),
+        getCurrentBlock(),
+        getActiveAuctions(),
+        getCompletedAuctions(),
+        getCancelledAuctions(),
+      ]);
+
+      // owedAmount needs account first
       const owedAmount = await getBidderOwedAmount(account);
 
       this.setState({
@@ -141,45 +172,21 @@ class App extends Component {
     try {
       const contract = getContract();
 
+      // Subscribe to ALL events at once (more reliable)
       contract.events
-        .AuctionCreated()
-        .on("data", () => this.loadAllData())
-        .on("error", console.error);
-
-      contract.events
-        .BidPlaced()
-        .on("data", () => this.loadAllData())
-        .on("error", console.error);
-
-      contract.events
-        .AuctionCancelled()
-        .on("data", () => this.loadAllData())
-        .on("error", console.error);
-
-      contract.events
-        .AuctionCompleted()
-        .on("data", () => this.loadAllData())
-        .on("error", console.error);
-
-      contract.events
-        .BidderCompensated()
-        .on("data", () => this.loadAllData())
-        .on("error", console.error);
-
-      contract.events
-        .FeesWithdrawn()
-        .on("data", () => this.loadAllData())
-        .on("error", console.error);
-
-      contract.events
-        .SellerBanned()
-        .on("data", () => this.loadAllData())
-        .on("error", console.error);
-
-      contract.events
-        .OwnershipTransferred()
-        .on("data", () => this.loadAllData())
-        .on("error", console.error);
+        .allEvents({
+          fromBlock: "latest",
+        })
+        .on("data", () => {
+          // Reload data on ANY event
+          this.loadAllData();
+        })
+        .on("error", (error) => {
+          console.error("Event error:", error);
+        })
+        .on("connected", (subscriptionId) => {
+          console.log("Event subscription active:", subscriptionId);
+        });
     } catch (error) {
       console.error("Error setting up contract events:", error);
     }
@@ -263,6 +270,7 @@ class App extends Component {
               />
 
               <AuctionList
+                key={account}
                 auctions={activeAuctions}
                 account={account}
                 owner={owner}
