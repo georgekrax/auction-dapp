@@ -1,7 +1,7 @@
-import { Component } from "react";
+import { Component } from 'react';
 
-import { getContract } from "../contract";
-import { getWeb3 } from "../web3";
+import { getContract } from '../contract';
+import { getWeb3 } from '../web3';
 
 class AuctionList extends Component {
   constructor(props) {
@@ -191,10 +191,10 @@ class AuctionList extends Component {
                 auction.highestBidder !==
                 "0x0000000000000000000000000000000000000000";
 
-              // Can cancel: seller or owner, and not expired
+              // Μπορεί να ακυρώσει: πωλητής ή ιδιοκτήτης, και δεν έχει λήξει
               const canCancel = (isSeller || isOwner) && !isExpired;
 
-              // Can fulfill: seller or owner, expired, and has bids
+              // Μπορεί να ολοκληρώσει: πωλητής ή ιδιοκτήτης + έχει λήξει + έχει προσφορές
               const canFulfill = (isSeller || isOwner) && isExpired && hasBids;
 
               return (

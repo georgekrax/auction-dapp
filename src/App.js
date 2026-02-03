@@ -1,11 +1,11 @@
-import { Component } from "react";
+import { Component } from 'react';
 
-import AdminPanel from "./components/AdminPanel";
-import AuctionList from "./components/AuctionList";
-import CancelledAuctions from "./components/CancelledAuctions";
-import CreateAuction from "./components/CreateAuction";
-import FulfilledAuctions from "./components/FulfilledAuctions";
-import Header from "./components/Header";
+import AdminPanel from './components/AdminPanel';
+import AuctionList from './components/AuctionList';
+import CancelledAuctions from './components/CancelledAuctions';
+import CreateAuction from './components/CreateAuction';
+import FulfilledAuctions from './components/FulfilledAuctions';
+import Header from './components/Header';
 import {
   getActiveAuctions,
   getBidderOwedAmount,
@@ -17,8 +17,8 @@ import {
   getOwner,
   getTotalFees,
   initContract,
-} from "./contract";
-import { getBalance, getCurrentAccount, initWeb3 } from "./web3";
+} from './contract';
+import { getBalance, getCurrentAccount, initWeb3 } from './web3';
 
 class App extends Component {
   constructor(props) {
@@ -44,7 +44,6 @@ class App extends Component {
 
     this.handleAccountsChanged = this.handleAccountsChanged.bind(this);
     this.handleChainChanged = this.handleChainChanged.bind(this);
-    this.loadDataTimeout = null; // NEW: For debouncing
   }
 
   async componentDidMount() {
@@ -98,7 +97,7 @@ class App extends Component {
     }
   }
 
-  handleChainChanged(chainId) {
+  handleChainChanged() {
     window.location.reload();
   }
 
@@ -124,7 +123,7 @@ class App extends Component {
 
   loadAllData = async () => {
     try {
-      // Run ALL calls in parallel instead of sequentially
+      // Τρέξε ΟΛΑ τα requests ταυτόχρονα αντί για σειριακά
       const [
         account,
         accountBalance,
@@ -147,7 +146,7 @@ class App extends Component {
         getCancelledAuctions(),
       ]);
 
-      // owedAmount needs account first
+      // owedAmount ξεχωριστά γιατί χρειάζεται το `account`
       const owedAmount = await getBidderOwedAmount(account);
 
       this.setState({
@@ -172,13 +171,13 @@ class App extends Component {
     try {
       const contract = getContract();
 
-      // Subscribe to ALL events at once (more reliable)
+      // ¶κουσε ΟΛΑ τα events μια φορά (πιο εμπιραστωμένη λύση)
       contract.events
         .allEvents({
           fromBlock: "latest",
         })
         .on("data", () => {
-          // Reload data on ANY event
+          // Ανανέωσε τα δεδομένα σε κάθε event
           this.loadAllData();
         })
         .on("error", (error) => {
@@ -196,7 +195,6 @@ class App extends Component {
     const {
       connected,
       loading,
-      error,
       account,
       accountBalance,
       owner,
@@ -231,19 +229,6 @@ class App extends Component {
           </div>
         </nav>
 
-        {error && (
-          <div className="container mt-3">
-            <div className="alert alert-danger alert-dismissible fade show">
-              <strong>Error:</strong> {error}
-              <button
-                type="button"
-                className="btn-close"
-                onClick={() => this.setState({ error: null })}
-              ></button>
-            </div>
-          </div>
-        )}
-
         <div className="container mt-4 mb-5">
           {!connected ? (
             <div className="text-center py-5">
@@ -262,31 +247,26 @@ class App extends Component {
                 totalFees={totalFees}
                 currentBlock={currentBlock}
               />
-
               <CreateAuction
                 account={account}
                 owner={owner}
                 onSuccess={this.loadAllData}
               />
-
               <AuctionList
-                key={account}
+                key={account} // Για καλύτερη ανανεώση του React DOM
                 auctions={activeAuctions}
                 account={account}
                 owner={owner}
                 currentBlock={currentBlock}
                 onSuccess={this.loadAllData}
               />
-
               <FulfilledAuctions auctions={completedAuctions} />
-
               <CancelledAuctions
                 auctions={cancelledAuctions}
                 owedAmount={owedAmount}
                 account={account}
                 onSuccess={this.loadAllData}
               />
-
               <AdminPanel
                 isOwner={isOwner}
                 account={account}

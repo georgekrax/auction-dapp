@@ -14,7 +14,7 @@ class CreateAuction extends Component {
       durationType: "0",
       creating: false,
       error: null,
-      isBanned: false, // NEW
+      isBanned: false,
     };
   }
 
@@ -23,7 +23,7 @@ class CreateAuction extends Component {
   }
 
   async componentDidUpdate(prevProps) {
-    // Recheck if account changed
+    // Έλεγξε ξανά αν ο λογαριασμός άλλαξε
     if (prevProps.account !== this.props.account) {
       await this.checkIfBanned();
     }
@@ -124,13 +124,11 @@ class CreateAuction extends Component {
               Contract owner cannot create auctions
             </div>
           )}
-
           {isBanned && (
             <div className="alert alert-danger mb-3">
               <strong>You are banned!</strong> You cannot create new auctions.
             </div>
           )}
-
           {error && (
             <div className="alert alert-danger alert-dismissible fade show">
               {error}
@@ -141,7 +139,6 @@ class CreateAuction extends Component {
               ></button>
             </div>
           )}
-
           <form
             onSubmit={this.createAuction}
             className={isOwner || isBanned ? "opacity-50" : ""}

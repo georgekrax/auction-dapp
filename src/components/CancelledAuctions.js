@@ -6,11 +6,11 @@ import { getWeb3 } from '../web3';
 class CancelledAuctions extends Component {
   constructor(props) {
     super(props);
-    
+
     this.state = {
       claiming: false,
       userBids: {},
-      claimablePerAuction: {}
+      claimablePerAuction: {},
     };
   }
 
@@ -19,8 +19,10 @@ class CancelledAuctions extends Component {
   }
 
   async componentDidUpdate(prevProps) {
-    if (prevProps.auctions !== this.props.auctions || 
-        prevProps.account !== this.props.account) {
+    if (
+      prevProps.auctions !== this.props.auctions ||
+      prevProps.account !== this.props.account
+    ) {
       await this.loadUserBids();
     }
   }
@@ -30,42 +32,44 @@ class CancelledAuctions extends Component {
     const contract = getContract();
     const userBids = {};
     const claimablePerAuction = {};
-    
+
     for (let auction of auctions) {
-      const bid = await contract.methods.bidderFunds(account, auction.id).call();
+      const bid = await contract.methods
+        .bidderFunds(account, auction.id)
+        .call();
       userBids[auction.id] = bid;
-      
-      // Check if this specific auction is claimable
-      if (bid !== '0' && parseInt(bid) > 0) {
-        // Cancelled auctions are always claimable if you have funds
-        // Active/Completed auctions claimable only if you're not the winner
+
+      // Έλεγξε αν η συγκεκριμένη δημοπρασία μπορεί να διεκδικηθεί
+      if (bid !== "0" && parseInt(bid) > 0) {
+        // Οι ακυρωμένες δημοπρασίες πάντα μπορούν να διεκδικηθούν αν έχεις υποβάλλει προσφορά
+        // Active/Completed δημοπρασία μόνο αν δεν είσαι ο νικητής
         const isCancelled = parseInt(auction.state) === 1; // ? Number comparison
-        const isNotWinner = auction.highestBidder.toLowerCase() !== account.toLowerCase();
-        
+        const isNotWinner =
+          auction.highestBidder.toLowerCase() !== account.toLowerCase();
+
         claimablePerAuction[auction.id] = isCancelled || isNotWinner;
       } else {
         claimablePerAuction[auction.id] = false;
       }
     }
-    
+
     this.setState({ userBids, claimablePerAuction });
   };
 
   claimCompensation = async () => {
     const { account, onSuccess } = this.props;
-    
+
     this.setState({ claiming: true });
-    
+
     try {
       await compensateBidder(account);
-      
+
       this.setState({ claiming: false });
-      
+
       if (onSuccess) onSuccess();
-      
     } catch (error) {
-      console.error('Error claiming compensation:', error);
-      alert('Failed to claim compensation: ' + error.message);
+      console.error("Error claiming compensation:", error);
+      alert("Failed to claim compensation: " + error.message);
       this.setState({ claiming: false });
     }
   };
@@ -73,7 +77,7 @@ class CancelledAuctions extends Component {
   render() {
     const { auctions, owedAmount } = this.props;
     const { claiming, userBids, claimablePerAuction } = this.state;
-    
+
     const web3 = getWeb3();
     const hasCompensation = parseFloat(owedAmount) > 0;
 
@@ -87,23 +91,19 @@ class CancelledAuctions extends Component {
               onClick={this.claimCompensation}
               disabled={claiming}
             >
-              {claiming ? 'Claiming...' : `Claim ${owedAmount} ETH`}
+              {claiming ? "Claiming..." : `Claim ${owedAmount} ETH`}
             </button>
           )}
         </div>
         <div className="card-body">
           {!hasCompensation && auctions && auctions.length === 0 && (
-            <div className="alert alert-info">
-              No cancelled auctions
-            </div>
+            <div className="alert alert-info">No cancelled auctions</div>
           )}
-          
           {!hasCompensation && auctions && auctions.length > 0 && (
             <div className="alert alert-info">
               No compensation available for you
             </div>
           )}
-          
           {auctions && auctions.length > 0 && (
             <div className="table-responsive">
               <table className="table table-sm">
@@ -116,35 +116,33 @@ class CancelledAuctions extends Component {
                   </tr>
                 </thead>
                 <tbody>
-                  {auctions.map(auction => {
-                    const userBid = userBids[auction.id] || '0';
-                    const hasBid = userBid !== '0' && parseInt(userBid) > 0;
-                    const isClaimable = claimablePerAuction[auction.id] || false;
-                    
+                  {auctions.map((auction) => {
+                    const userBid = userBids[auction.id] || "0";
+                    const hasBid = userBid !== "0" && parseInt(userBid) > 0;
+                    const isClaimable =
+                      claimablePerAuction[auction.id] || false;
+
                     return (
                       <tr key={auction.id}>
                         <td>{auction.title}</td>
                         <td>
-                          <code className="small">
-                            {auction.seller}
-                          </code>
+                          <code className="small">{auction.seller}</code>
                         </td>
                         <td>
-                          {hasBid 
-                            ? `${web3.utils.fromWei(userBid, 'ether')} ETH`
-                            : '-'
-                          }
+                          {hasBid
+                            ? `${web3.utils.fromWei(userBid, "ether")} ETH`
+                            : "-"}
                         </td>
                         <td>
                           {hasBid && isClaimable && (
-                            <span className="badge bg-warning text-dark">Pending Claim</span>
+                            <span className="badge bg-warning text-dark">
+                              Pending Claim
+                            </span>
                           )}
                           {hasBid && !isClaimable && (
                             <span className="badge bg-success">Claimed</span>
                           )}
-                          {!hasBid && (
-                            <span className="text-muted">-</span>
-                          )}
+                          {!hasBid && <span className="text-muted">-</span>}
                         </td>
                       </tr>
                     );

@@ -1,51 +1,50 @@
-import { Component } from 'react';
+import { Component } from "react";
 
 import {
   banSeller,
   destroyContract,
   transferOwnership,
   withdrawFees,
-} from '../contract';
+} from "../contract";
 
 class AdminPanel extends Component {
   constructor(props) {
     super(props);
-    
+
     this.state = {
-      newOwnerAddress: '',
-      banSellerAddress: '',
+      newOwnerAddress: "",
+      banSellerAddress: "",
       withdrawing: false,
       banning: false,
       transferring: false,
-      destroying: false
+      destroying: false,
     };
   }
 
   handleInputChange = (event) => {
     this.setState({
-      [event.target.name]: event.target.value
+      [event.target.name]: event.target.value,
     });
   };
 
   handleWithdrawFees = async () => {
     const { account, onSuccess } = this.props;
-    
-    if (!window.confirm('Withdraw all available fees?')) {
+
+    if (!window.confirm("Withdraw all available fees?")) {
       return;
     }
-    
+
     this.setState({ withdrawing: true });
-    
+
     try {
       await withdrawFees(account);
-      
+
       this.setState({ withdrawing: false });
-      
+
       if (onSuccess) onSuccess();
-      
     } catch (error) {
-      console.error('Error withdrawing fees:', error);
-      alert('Failed to withdraw fees: ' + error.message);
+      console.error("Error withdrawing fees:", error);
+      alert("Failed to withdraw fees: " + error.message);
       this.setState({ withdrawing: false });
     }
   };
@@ -53,31 +52,34 @@ class AdminPanel extends Component {
   handleBanSeller = async () => {
     const { banSellerAddress } = this.state;
     const { account, onSuccess } = this.props;
-    
+
     if (!banSellerAddress) {
-      alert('Please enter seller address');
+      alert("Please enter seller address");
       return;
     }
-    
-    if (!window.confirm(`Ban seller ${banSellerAddress}? All their active auctions will be cancelled.`)) {
+
+    if (
+      !window.confirm(
+        `Ban seller ${banSellerAddress}? All their active auctions will be cancelled.`,
+      )
+    ) {
       return;
     }
-    
+
     this.setState({ banning: true });
-    
+
     try {
       await banSeller(account, banSellerAddress);
-      
-      this.setState({ 
+
+      this.setState({
         banning: false,
-        banSellerAddress: ''
+        banSellerAddress: "",
       });
-      
+
       if (onSuccess) onSuccess();
-      
     } catch (error) {
-      console.error('Error banning seller:', error);
-      alert('Failed to ban seller: ' + error.message);
+      console.error("Error banning seller:", error);
+      alert("Failed to ban seller: " + error.message);
       this.setState({ banning: false });
     }
   };
@@ -85,67 +87,69 @@ class AdminPanel extends Component {
   handleTransferOwnership = async () => {
     const { newOwnerAddress } = this.state;
     const { account, onSuccess } = this.props;
-    
+
     if (!newOwnerAddress) {
-      alert('Please enter new owner address');
+      alert("Please enter new owner address");
       return;
     }
-    
+
     if (!window.confirm(`Transfer ownership to ${newOwnerAddress}?`)) {
       return;
     }
-    
+
     this.setState({ transferring: true });
-    
+
     try {
       await transferOwnership(account, newOwnerAddress);
-      
-      this.setState({ 
+
+      this.setState({
         transferring: false,
-        newOwnerAddress: ''
+        newOwnerAddress: "",
       });
-      
+
       if (onSuccess) onSuccess();
-      
     } catch (error) {
-      console.error('Error transferring ownership:', error);
-      alert('Failed to transfer ownership: ' + error.message);
+      console.error("Error transferring ownership:", error);
+      alert("Failed to transfer ownership: " + error.message);
       this.setState({ transferring: false });
     }
   };
 
   handleDestroyContract = async () => {
     const { account, onSuccess } = this.props;
-    
-    if (!window.confirm('DESTROY CONTRACT? This will cancel all active auctions and withdraw all fees. This action cannot be undone!')) {
+
+    if (
+      !window.confirm(
+        "DESTROY CONTRACT? This will cancel all active auctions and withdraw all fees. This action cannot be undone!",
+      )
+    ) {
       return;
     }
-    
+
     this.setState({ destroying: true });
-    
+
     try {
       await destroyContract(account);
-      
+
       this.setState({ destroying: false });
-      
+
       if (onSuccess) onSuccess();
-      
     } catch (error) {
-      console.error('Error destroying contract:', error);
-      alert('Failed to destroy contract: ' + error.message);
+      console.error("Error destroying contract:", error);
+      alert("Failed to destroy contract: " + error.message);
       this.setState({ destroying: false });
     }
   };
 
   render() {
     const { isOwner } = this.props;
-    const { 
-      newOwnerAddress, 
+    const {
+      newOwnerAddress,
       banSellerAddress,
       withdrawing,
       banning,
       transferring,
-      destroying
+      destroying,
     } = this.state;
 
     if (!isOwner) {
@@ -164,14 +168,15 @@ class AdminPanel extends Component {
               <div className="border rounded p-3">
                 <h6>Withdraw Fees</h6>
                 <p className="text-muted small">
-                  Withdraw all accumulated fees (creation fees + 20% platform fees)
+                  Withdraw all accumulated fees (creation fees + 20% platform
+                  fees)
                 </p>
                 <button
                   className="btn btn-success w-100"
                   onClick={this.handleWithdrawFees}
                   disabled={withdrawing}
                 >
-                  {withdrawing ? 'Withdrawing...' : 'Withdraw Fees'}
+                  {withdrawing ? "Withdrawing..." : "Withdraw Fees"}
                 </button>
               </div>
             </div>
@@ -196,7 +201,7 @@ class AdminPanel extends Component {
                   onClick={this.handleTransferOwnership}
                   disabled={transferring || !newOwnerAddress}
                 >
-                  {transferring ? 'Transferring...' : 'Change Owner'}
+                  {transferring ? "Transferring..." : "Change Owner"}
                 </button>
               </div>
             </div>
@@ -224,7 +229,7 @@ class AdminPanel extends Component {
                   onClick={this.handleBanSeller}
                   disabled={banning || !banSellerAddress}
                 >
-                  {banning ? 'Banning...' : 'Ban Seller'}
+                  {banning ? "Banning..." : "Ban Seller"}
                 </button>
               </div>
             </div>
@@ -234,14 +239,15 @@ class AdminPanel extends Component {
               <div className="border rounded p-3 bg-light">
                 <h6 className="text-danger">Destroy Contract</h6>
                 <p className="text-muted small">
-                  Cancel all auctions, withdraw all fees, and disable new auctions
+                  Cancel all auctions, withdraw all fees, and disable new
+                  auctions
                 </p>
                 <button
                   className="btn btn-danger w-100"
                   onClick={this.handleDestroyContract}
                   disabled={destroying}
                 >
-                  {destroying ? 'Destroying...' : 'Destroy Contract'}
+                  {destroying ? "Destroying..." : "Destroy Contract"}
                 </button>
               </div>
             </div>

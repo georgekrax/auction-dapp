@@ -1,5 +1,4 @@
 /* Minimal custom styles - Bootstrap handles most */
-
 .App {
   min-height: 100vh;
   background-color: #f8f9fa;
@@ -19,7 +18,6 @@ code {
   white-space: nowrap;
 }
 
-/* Ensure cards have consistent spacing */
 .card {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }

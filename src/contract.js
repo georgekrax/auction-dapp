@@ -1,18 +1,18 @@
-import AUCTION_ABI from './AuctionABI.json';
-import { getWeb3 } from './web3';
+import AUCTION_ABI from "./AuctionABI.json";
+import { getWeb3 } from "./web3";
 
 const CONTRACT_ADDRESS = "0x2a6608127c44be3d7f96c27840710464583a4777";
 
 let contract;
 
-// Initialize contract
+// Αρχικοποίηση συμβολαίου
 export const initContract = () => {
   const web3 = getWeb3();
   contract = new web3.eth.Contract(AUCTION_ABI, CONTRACT_ADDRESS);
   return contract;
 };
 
-// Get contract instance
+// Λήψη συμβολαίου
 export const getContract = () => {
   if (!contract) {
     throw new Error("Contract not initialized. Call initContract() first.");
@@ -25,19 +25,16 @@ export const getCurrentBlock = async () => {
   return await web3.eth.getBlockNumber();
 };
 
-// Get contract owner
 export const getOwner = async () => {
   const contract = getContract();
   return await contract.methods.owner().call();
 };
 
-// Get auction counter
 export const getAuctionCounter = async () => {
   const contract = getContract();
   return await contract.methods.auctionCounter().call();
 };
 
-// Get total fees
 export const getTotalFees = async () => {
   const contract = getContract();
   const web3 = getWeb3();
@@ -45,7 +42,6 @@ export const getTotalFees = async () => {
   return web3.utils.fromWei(fees, "ether");
 };
 
-// Get contract balance
 export const getContractBalance = async () => {
   const contract = getContract();
   const web3 = getWeb3();
@@ -53,7 +49,7 @@ export const getContractBalance = async () => {
   return web3.utils.fromWei(balance, "ether");
 };
 
-// Generic function to load auction details by IDs
+// Γενική function για να γίνει λήψη των δημοπρασιών βάση του ID τους
 const loadAuctionDetails = async (auctionIds) => {
   const contract = getContract();
   const auctions = [];
@@ -76,28 +72,25 @@ const loadAuctionDetails = async (auctionIds) => {
   return auctions;
 };
 
-// Get active auctions with details
 export const getActiveAuctions = async () => {
   const contract = getContract();
   const auctionIds = await contract.methods.getActiveAuctions().call();
   return await loadAuctionDetails(auctionIds);
 };
 
-// Get completed auctions with details
 export const getCompletedAuctions = async () => {
   const contract = getContract();
   const auctionIds = await contract.methods.getCompletedAuctions().call();
   return await loadAuctionDetails(auctionIds);
 };
 
-// Get cancelled auctions with details
 export const getCancelledAuctions = async () => {
   const contract = getContract();
   const auctionIds = await contract.methods.getCancelledAuctions().call();
   return await loadAuctionDetails(auctionIds);
 };
 
-// Check how much the contract owes to a bidder
+// Έλεγξε πόσο οφείλει το συμβόλαιο στον πλειοδότη
 export const getBidderOwedAmount = async (bidderAddress) => {
   const contract = getContract();
   const web3 = getWeb3();
@@ -113,9 +106,6 @@ export const getBidderOwedAmount = async (bidderAddress) => {
     if (fundsInAuction !== "0" && parseInt(fundsInAuction) > 0) {
       const auction = await contract.methods.auctions(i).call();
 
-      // Can claim if:
-      // 1. Auction is Cancelled (state = 1), OR
-      // 2. You are NOT the highest bidder (you were outbid)
       const isCancelled = parseInt(auction.state) === 1; // ? Convert to number
       const isNotHighestBidder =
         auction.highestBidder.toLowerCase() !== bidderAddress.toLowerCase();
@@ -131,19 +121,17 @@ export const getBidderOwedAmount = async (bidderAddress) => {
     : "0";
 };
 
-// Compensate bidder
 export const compensateBidder = async (account) => {
   const contract = getContract();
   return await contract.methods.compensateBidder().send({ from: account });
 };
 
-// [ADMIN]: Withdraw fees
+// ---- ADMIN FUNCTIONS/FEATURES ---- //
 export const withdrawFees = async (account) => {
   const contract = getContract();
   return await contract.methods.withdrawFees().send({ from: account });
 };
 
-// [ADMIN]: Ban seller
 export const banSeller = async (account, sellerAddress) => {
   const contract = getContract();
   return await contract.methods
@@ -151,7 +139,6 @@ export const banSeller = async (account, sellerAddress) => {
     .send({ from: account });
 };
 
-// [ADMIN]: Transfer ownership
 export const transferOwnership = async (account, newOwner) => {
   const contract = getContract();
   return await contract.methods
@@ -159,7 +146,6 @@ export const transferOwnership = async (account, newOwner) => {
     .send({ from: account });
 };
 
-// [ADMIN]: Destroy contract
 export const destroyContract = async (account) => {
   const contract = getContract();
   return await contract.methods.destroyContract().send({ from: account });

@@ -1,6 +1,6 @@
-import { Component } from 'react';
+import { Component } from "react";
 
-import { getWeb3 } from '../web3';
+import { getWeb3 } from "../web3";
 
 class FulfilledAuctions extends Component {
   render() {
@@ -44,14 +44,10 @@ class FulfilledAuctions extends Component {
                       <strong>{auction.title}</strong>
                     </td>
                     <td>
-                      <code className="small">
-                        {auction.seller}
-                      </code>
+                      <code className="small">{auction.seller}</code>
                     </td>
                     <td>
-                      <code className="small">
-                        {auction.highestBidder}
-                      </code>
+                      <code className="small">{auction.highestBidder}</code>
                     </td>
                     <td className="text-success">
                       <strong>
